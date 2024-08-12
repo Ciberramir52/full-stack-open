@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-const morgan = require('morgan')
+const morgan = require('morgan');
+
 let persons = [
     {
         "id": 1,
@@ -36,6 +37,8 @@ function morganForPostRequests(req, res, next) {
     }
     next();
 }
+
+app.use(express.static('dist'));
 
 app.use(express.json());
 // app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
