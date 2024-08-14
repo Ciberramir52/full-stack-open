@@ -79,10 +79,15 @@ app.post('/api/persons', (req, res) => {
     if (checkPerson) return res.status(400).json({
         error: 'name must be unique'
     });
-    const id = Math.floor(Math.random() * 5000);
-    const result = { id, ...person };
-    localPersons = localPersons.concat(result)
-    res.json(result);
+    // const id = Math.floor(Math.random() * 5000);
+    // const result = { id, ...person };
+    const uploadPerson = new Person(person);
+    // localPersons = localPersons.concat(result)
+    uploadPerson.save().then(result => {
+        // console.log('Person saved!', result)
+        // mongoose.connection.close()
+        res.json(result);
+    })
 })
 
 app.get('/info', (req, res) => {
