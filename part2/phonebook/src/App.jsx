@@ -73,7 +73,7 @@ const App = () => {
     if (newName === '' || newNumber === '') return alert('Please enter data');
     const checkedPerson = persons.find(person => person.name === newName);
     if (checkedPerson) {
-      const confirmUpdate = confirm(`${newName} is already added to the phonebook.`);
+      const confirmUpdate = confirm(`${newName} is already added to the phonebook. Do you want to update the contact?`);
       if (confirmUpdate) {
         const updatedPerson = { ...checkedPerson, name: newName, number: newNumber }
         return personService
@@ -91,7 +91,7 @@ const App = () => {
           })
           .catch(error => {
             setErrorMessage(
-              `Person '${checkedPerson.name}' was already removed from server`
+              `Error: ${error.response.data.error}`
             )
             setTimeout(() => {
               setErrorMessage(null)
@@ -99,6 +99,7 @@ const App = () => {
             setPersons(persons.filter(p => p.id !== checkedPerson.id))
             setNewName('');
             setNewNumber('');
+            console.log(error.response.data.error);            
           })
       }
     }
@@ -115,19 +116,29 @@ const App = () => {
         setNewName('');
         setNewNumber('');
       })
+      .catch(error => {
+        setErrorMessage(
+          `Error: ${error.response.data.error}`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000);
+        setNewName('');
+        setNewNumber('');
+      });
   }
 
   const onDeletePerson = id => {
     personService
       .deletePerson(id)
-      .then(returnedPerson => setPersons(persons.filter(person => person.id !== returnedPerson.id)))
+      .then(() => setPersons(persons.filter(person => person.id !== id)))
       .catch(error => {
         setErrorMessage(
-          `Already removed from server`
+          `Error: ${error.response.data.error}`
         )
         setTimeout(() => {
           setErrorMessage(null)
-        }, 5000)
+        }, 5000);
         setPersons(persons.filter(p => p.id !== id))
       })
   }
@@ -139,6 +150,14 @@ const App = () => {
       .getAll()
       .then(initialPersons => {
         setPersons(initialPersons);
+      })
+      .catch(error => {
+        setErrorMessage(
+          `Error: ${error.response.data.error}`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000);
       })
   }, []);
 
