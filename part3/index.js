@@ -5,29 +5,6 @@ const app = express();
 const cors = require('cors');
 const morgan = require('morgan');
 
-let localPersons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    }
-];
-
 app.use(cors());
 
 morgan.token('body', req => JSON.stringify(req.body));
@@ -50,10 +27,19 @@ app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>');
 });
 
-app.get('/api/persons', (req, res) => {
+app.get('/info', (req, res, next) => {
+    Person.find({}).then(result => {
+        res.send(`
+            <p>Phonebook has info for ${result.length} persons</p>
+            <p>${new Date()}</p>
+        `);
+    }).catch(error => next(error));
+});
+
+app.get('/api/persons', (req, res, next) => {
     Person.find({}).then(result => {
         res.json(result);
-    })
+    }).catch(error => next(error))
 });
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -67,7 +53,7 @@ app.get('/api/persons/:id', (req, res, next) => {
             if (person) {
                 res.json(person)
             } else {
-                res.sendStatus(404);
+                res.status(404).end();
             }
         })
         .catch(error => next(error))
@@ -79,54 +65,48 @@ app.delete('/api/persons/:id', (req, res, next) => {
     // res.sendStatus(204);
     Person.findByIdAndDelete(req.params.id)
         .then(result => {
-            res.sendStatus(204);
+            response.status(204).end();
         })
         .catch(error => next(error));
 });
 
-app.post('/api/persons', (req, res) => {
-    const person = req.body;
-    if (!person || person.name === '' || person.number === '') return res.status(400).json({
-        error: 'content missing'
-    });
-    const checkPerson = localPersons.find(element => element.name === person.name);
-    if (checkPerson) return res.status(400).json({
-        error: 'name must be unique'
-    });
+app.post('/api/persons', (req, res, next) => {
+    const body = req.body;
+    console.log(body);
+    
+    if (!body.name || !body.number) {
+        return response.status(400).json({
+            error: 'name or number missing'
+        })
+    }
+    Person.find({ name: body.name })
+        .then(result => {
+            if (result) return res.status(400).json({
+                error: 'name must be unique'
+            });
+            const uploadPerson = new Person(body);
+            uploadPerson.save().then(resultUpload => {
+                // console.log('Person saved!', result)
+                // mongoose.connection.close()
+                res.json(resultUpload);
+            }).catch(error => next(error));
+        }).catch(error => next(error));
     // const id = Math.floor(Math.random() * 5000);
     // const result = { id, ...person };
-    const uploadPerson = new Person(person);
     // localPersons = localPersons.concat(result)
-    uploadPerson.save().then(result => {
-        // console.log('Person saved!', result)
-        // mongoose.connection.close()
-        res.json(result);
-    })
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
     const body = req.body
 
-    const person = {
-        name: body.name,
-        number: body.number,
-    }
+    const person = { ...body }
 
-    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    Person.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true, context: 'query' })
         .then(updatedPerson => {
             res.json(updatedPerson)
         })
         .catch(error => next(error))
 })
-
-app.get('/info', (req, res) => {
-    Person.find({}).then(result => {
-        res.send(`
-            <p>Phonebook has info for ${result.length}</p>
-            <p>${new Date()}</p>
-        `);
-    })
-});
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
@@ -144,7 +124,7 @@ const errorHandler = (error, request, response, next) => {
         return response.status(400).json({ error: error.message });
     }
 
-    next(error)
+    next(error);
 }
 
 // este debe ser el último middleware cargado, ¡también todas las rutas deben ser registrada antes que esto!
