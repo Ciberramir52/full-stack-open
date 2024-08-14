@@ -28,7 +28,7 @@ let localPersons = [
     }
 ];
 
-app.use(cors())
+app.use(cors());
 
 morgan.token('body', req => JSON.stringify(req.body));
 
@@ -52,22 +52,36 @@ app.get('/', (req, res) => {
 
 app.get('/api/persons', (req, res) => {
     Person.find({}).then(result => {
-        res.json(result);        
+        res.json(result);
     })
 });
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-    const person = localPersons.find(person => person.id === id);
-    console.log(person);
-    if (!person) return res.sendStatus(404);
-    return res.json(person);
+app.get('/api/persons/:id', (req, res, next) => {
+    // const id = Number(req.params.id);
+    // const person = localPersons.find(person => person.id === id);
+    // console.log(person);
+    // if (!person) return res.sendStatus(404);
+    // return res.json(person);
+    Person.findById(req.params.id)
+        .then(person => {
+            if (person) {
+                res.json(person)
+            } else {
+                res.sendStatus(404);
+            }
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-    localPersons = localPersons.filter(person => person.id !== id);
-    res.sendStatus(204);
+app.delete('/api/persons/:id', (req, res, next) => {
+    // const id = Number(req.params.id);
+    // localPersons = localPersons.filter(person => person.id !== id);
+    // res.sendStatus(204);
+    Person.findByIdAndDelete(req.params.id)
+        .then(result => {
+            res.sendStatus(204);
+        })
+        .catch(error => next(error));
 });
 
 app.post('/api/persons', (req, res) => {
@@ -90,15 +104,54 @@ app.post('/api/persons', (req, res) => {
     })
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+
+    const person = {
+        name: body.name,
+        number: body.number,
+    }
+
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
+})
+
 app.get('/info', (req, res) => {
-    res.send(`
-        <p>Phonebook has info for ${localPersons.length}</p>
-        <p>${new Date()}</p>
-    `);
+    Person.find({}).then(result => {
+        res.send(`
+            <p>Phonebook has info for ${result.length}</p>
+            <p>${new Date()}</p>
+        `);
+    })
 });
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+
+// controlador de solicitudes con endpoint desconocido
+app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message });
+    }
+
+    next(error)
+}
+
+// este debe ser el último middleware cargado, ¡también todas las rutas deben ser registrada antes que esto!
+app.use(errorHandler)
 
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
 });
