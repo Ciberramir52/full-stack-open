@@ -65,23 +65,27 @@ app.delete('/api/persons/:id', (req, res, next) => {
     // res.sendStatus(204);
     Person.findByIdAndDelete(req.params.id)
         .then(result => {
-            response.status(204).end();
+            if (!result) return res.status(404).json({ error: 'Already removed from server' });
+            res.status(204).end();
         })
         .catch(error => next(error));
 });
 
 app.post('/api/persons', (req, res, next) => {
     const body = req.body;
-    console.log(body);
-    
-    if (!body.name || !body.number) {
+    console.log(body.name, body.number);
+
+    if (!body.name || !body.number || body.name === '' || body.number === '') {
+        console.log(body.name, body.number);
         return response.status(400).json({
             error: 'name or number missing'
         })
     }
     Person.find({ name: body.name })
         .then(result => {
-            if (result) return res.status(400).json({
+            console.log(result);
+
+            if (result.length !== 0) return res.status(400).json({
                 error: 'name must be unique'
             });
             const uploadPerson = new Person(body);
