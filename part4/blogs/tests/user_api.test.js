@@ -13,6 +13,7 @@ const api = supertest(app)
 describe('when there is initially one user in db', () => {
     beforeEach(async () => {
         await User.deleteMany({})
+        await Blog.deleteMany({})
 
         const passwordHash = await bcrypt.hash('sekret', 10)
         const user = new User({ username: 'pepe', passwordHash })
@@ -127,7 +128,7 @@ describe('when there is initially one user in db', () => {
 })
 
 after(async () => {
-    await Blog.deleteMany({});
-    await User.deleteMany({});
+    // await Blog.deleteMany({});
+    // await User.deleteMany({});
     await mongoose.connection.close()
 })

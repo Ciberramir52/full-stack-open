@@ -15,18 +15,17 @@ describe('when there is initially some blogs saved', () => {
 
     beforeEach(async () => {
         await User.deleteMany({});
+        await Blog.deleteMany({});
         const passwordHash = await bcrypt.hash('sekret', 10)
-        const user = new User({ username: 'croata', passwordHash })
+        const user = new User({ username: 'cricri', passwordHash })
         await user.save()
         const response = await api
             .post('/api/login')
-            .send({ username: 'croata', password: 'sekret' })
+            .send({ username: user.username, password: 'sekret' })
             .expect(200)
             .expect('Content-Type', /application\/json/)
         const initialBlogs = helper.initialBlogs.map(b => ({ ...b, user: user.id }))
-        await Blog.deleteMany({});
         await Blog.insertMany(initialBlogs);
-
         userTest = response.body;
     })
 
@@ -39,7 +38,9 @@ describe('when there is initially some blogs saved', () => {
     })
 
     test('all blogs are returned', async () => {
-        const response = await api.get('/api/blogs').set('Authorization', `Bearer ${userTest.token}`)
+        const response = await api
+            .get('/api/blogs')
+            .set('Authorization', `Bearer ${userTest.token}`)
         assert.strictEqual(response.body.length, helper.initialBlogs.length)
     })
 
@@ -76,7 +77,7 @@ describe('when there is initially some blogs saved', () => {
                 .expect(200)
                 .expect('Content-Type', /application\/json/)
 
-            assert.deepStrictEqual(resultBlog.body, { ...blogToView, user: blogToView.user.toString()})
+            assert.deepStrictEqual(resultBlog.body, { ...blogToView, user: blogToView.user.toString() })
         })
 
         test('fails with statuscode 404 if blog does not exist', async () => {
@@ -240,7 +241,7 @@ describe('when there is initially some blogs saved', () => {
 })
 
 after(async () => {
-    await Blog.deleteMany({});
-    await User.deleteMany({});
+    // await Blog.deleteMany({});
+    // await User.deleteMany({});
     await mongoose.connection.close()
 })

@@ -6,12 +6,14 @@ const assert = require('node:assert')
 const app = require('../app')
 const { test, after, beforeEach, describe } = require('node:test')
 const mongoose = require('mongoose')
+const Blog = require('../models/blog')
 
 const api = supertest(app)
 
 describe('user login', () => {
     beforeEach(async () => {
         await User.deleteMany({})
+        await Blog.deleteMany({})
 
         const passwordHash = await bcrypt.hash('sekret', 10)
         const user = new User({ username: 'kaka', passwordHash })
@@ -77,6 +79,6 @@ describe('user login', () => {
 })
 
 after(async () => {
-    await User.deleteMany({});
+    // await User.deleteMany({});
     await mongoose.connection.close()
 })

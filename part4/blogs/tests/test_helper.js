@@ -1,6 +1,6 @@
-const { after } = require("lodash");
 const Blog = require("../models/blog")
 const User = require('../models/user')
+require('dotenv').config()
 
 const initialBlogs = [
     {
@@ -34,6 +34,25 @@ const usersInDb = async () => {
     const users = await User.find({})
     return users.map(u => u.toJSON())
 }
+
+// Connect once before all tests
+// before(async () => {
+//     await mongoose.connect(process.env.TEST_MONGODB_URI, {
+//         useNewUrlParser: true,
+//         useUnifiedTopology: true,
+//     });
+// });
+
+// Disconnect after all tests
+// after(async () => {
+//     await mongoose.connection.close();
+// });
+
+// // Reset data before each test
+// beforeEach(async () => {
+//     await Blog.deleteMany({});
+//     await User.deleteMany({});
+// });
 
 
 module.exports = {
