@@ -34,8 +34,10 @@ const Blog = ({ blog, addLikes, deleteBlog }) => {
   }
 
   const onDeleteBlog = () => {
-    blogService.deleteBlog(blog.id)
-    deleteBlog(blog.id)
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      blogService.deleteBlog(blog.id)
+      deleteBlog(blog.id)
+    }
   }
 
 
