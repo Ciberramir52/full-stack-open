@@ -59,14 +59,39 @@ const App = () => {
     }
   }
 
-  const handleDeleteBlog = async (id) => {
-    const newBlogs = blogs.filter(b => b.id !== id)
-    setBlogs(newBlogs)
+  const handleDeleteBlog = async (blog) => {
+    try {
+      if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+        await blogService.deleteBlog(blog.id)
+        const newBlogs = blogs.filter(b => b.id !== blog.id)
+        setBlogs(newBlogs)
+      }
+    } catch (exception) {
+      setErrorMessage('Wrong credentials')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
 
   const handleAddLikes = (blog) => {
-    const updatedBlogs = blogs.map(b => b.id === blog.id ? blog : b)
-    setBlogs(updatedBlogs)
+    try {
+      const updatedBlog = {
+        title: blog.title,
+        likes: blog.likes + 1,
+        author: blog.author,
+        url: blog.url,
+        // user: blog.user.id
+      }
+      blogService.addLikes(blog.id, { ...updatedBlog, user: blog.user.id })
+      const updatedBlogs = blogs.map(b => b.id === blog.id ? { ...updatedBlog, id: blog.id, user: blog.user } : b)
+      setBlogs(updatedBlogs)
+    } catch (exception) {
+      setErrorMessage('Wrong credentials')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
 
   const handleLogin = async (event) => {
