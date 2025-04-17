@@ -128,7 +128,7 @@ const App = () => {
 
   const loginForm = () => {
     return (
-      <Togglable buttonLabel='login'>
+      <Togglable buttonLabel='log in'>
         <LoginForm
           username={username}
           password={password}
@@ -143,6 +143,7 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
+      <h3>Blog app, CloseDreamers, Ciberramir52 2025</h3>
 
       <Notification type="successful" message={successfulMessage} />
       <Notification type="error" message={errorMessage} />
@@ -164,7 +165,7 @@ const App = () => {
 
       {user && blogs.sort((a, b) => b.likes - a.likes)
         .map(blog =>
-          <Blog key={blog.id} blog={blog} addLikes={handleAddLikes} deleteBlog={handleDeleteBlog} />
+          <Blog user={user} key={blog.id} blog={blog} addLikes={handleAddLikes} deleteBlog={handleDeleteBlog} />
         )}
     </div>
   )

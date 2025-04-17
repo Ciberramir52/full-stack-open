@@ -123,7 +123,7 @@ test('delete blog when clicking delete button', async () => {
 
   const mockDeleteBlog = vi.fn()
 
-  render(<Blog blog={blog} deleteBlog={mockDeleteBlog} />)
+  render(<Blog user={blog.user} blog={blog} deleteBlog={mockDeleteBlog} />)
 
   const user = userEvent.setup()
   const button = screen.getByText('delete')
